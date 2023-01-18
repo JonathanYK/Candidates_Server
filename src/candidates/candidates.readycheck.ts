@@ -8,6 +8,8 @@ export class CandidatesServiceReadyCheck extends ReadyIndicator {
     async checkReadiness(): Promise<void> {
       let result: AxiosResponse<any>;
       try {
+
+        // TODO change to db url:
         const pingURL = `https://www.google.com/`;
         result = await axios(pingURL);
   
