@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  web:
+    build:
+      context: ./
+      target: candidates
+    volumes:
+      - .:/src
+    command: npm run dev
+    ports:
+      - "3001:3001"
+    #depends_on:
+    #  - db
+    environment:
+      - DATABASE_URL=db://todoapp@postgres/todos
+      - PORT=3001
+      - POSTGRESPORT=5432
+      - DB_NAME-apitests
+      - USER=postgres
+      - PASSWORD=postgres
+    networks:
+      - cb
+  
+  db:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - '5432:5432'
+    volumes: 
+      - db:/var/lib/postgresql/data
+    networks:
+      - cb
+volumes:
+  db:
+    driver: local
+
+networks:
+  cb:

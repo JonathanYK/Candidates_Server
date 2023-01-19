@@ -1,5 +1,4 @@
 import express, { Request, Response } from "express";
-import { CandidatesServiceReadyCheck } from "./candidates.readycheck"
 export const router = express.Router();
 const { getClient } = require('./getClient');
 
@@ -26,18 +25,21 @@ router.get("/health", async (res: Response) => {
     }
   });
 
+  // GET ready check
+router.get("/ready", async (res: Response) => { 
 
-// GET readiness check - TODO: check in front of DB
-router.get("/ready", async (res: Response) => {
   try {
-    const candidatesServiceReadyCheck = new CandidatesServiceReadyCheck()
-    candidatesServiceReadyCheck.checkReadiness()
-    res.status(200).send("ready check finished!")
-      
-  } catch (e) {
-    res.status(500).send(e.message);
-  }
-});
+    const client = await getClient();
+    if (client._connected) {
+      let retval: string  = "ready check passed!";
+      await client.end();
+      res.status(200).send(retval);
+    }
+  
+    } catch (e) {
+      res.status(400).send(`Cannot connect to Postgres db: ${e.message}`);
+    }
+  });
 
 
 // GET all candidates
@@ -48,7 +50,6 @@ router.get("/all-candidates", async (res: Response) => {
     const client = await getClient();
     const answer = await client.query(`select * from users`);
     await client.end();
-    console.log(answer.rows)
     return answer.rows
     })();
 
@@ -65,13 +66,12 @@ router.get("/candidate", async (req: Request, res: Response) => {
   try {
 
     var reqName = req.query.name
-    console.log(reqName)
 
     const aa = await (async () => {
       const client = await getClient();
       const answer = await client.query(`select * from users where name='${reqName}';`);
       await client.end();
-      console.log(answer.rows[0])
+
       return answer.rows[0]
     })();
 
@@ -81,7 +81,6 @@ router.get("/candidate", async (req: Request, res: Response) => {
     res.status(500).send(e.message);
   }
 });
-
 
 // POST new entry of candidate
 router.post("/candidate", async (req: Request, res: Response) => {
@@ -96,6 +95,7 @@ router.post("/candidate", async (req: Request, res: Response) => {
     if (error) {
       throw error
     }
+    client.end();
     res.status(201).send(`User added with ID: ${reqId}`)
 
   });
@@ -114,12 +114,14 @@ router.put("/candidate", async (req: Request, res: Response) => {
     var reqEmail = req.query.email
 
     const client = await getClient();
+
     await client.query( 'UPDATE users SET email = $1, WHERE id = $2',
     [reqEmail, reqId],
     (error: Error) => {
       if (error) {
         throw error
       }
+      client.end();
       res.status(200).send(`email changed for user with ID: ${reqId}`)
   });
 
@@ -134,7 +136,6 @@ router.delete("/candidate", async (req: Request, res: Response) => {
   try {
 
     var reqId = req.query.id
-    console.log(reqId)
 
     const client = await getClient();
     await client.query( 'DELETE FROM users WHERE id = $1', [reqId],
@@ -142,6 +143,7 @@ router.delete("/candidate", async (req: Request, res: Response) => {
       if (error) {
         throw error
       }
+      client.end();
       res.status(200).send(`User modified with ID: ${reqId}`)
   });
 

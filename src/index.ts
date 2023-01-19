@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import { router } from "./candidates/apis.router";
+import { router } from "./candidates/endpoints.router";
 
 dotenv.config();
 
