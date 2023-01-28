@@ -4,13 +4,12 @@ require('dotenv').config();
 module.exports.getClient = async () => {
   const client = new Client({
 
-    //TODO: pull from compose:
-    //host: 'localhost',
-    host: 'db',
-    port: '5432',
-    user: 'postgres',
-    password: 'postgres',
-    database: 'apitests',
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+
   });
   await client.connect();
   return client;
