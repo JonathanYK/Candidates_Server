@@ -1,0 +1,47 @@
+
+name: CI Pulumi Deployment to Development
+
+on:
+  push:
+    branches:  
+      - '*'
+    paths-ignore:
+      - 'main/**'
+  pull_request:
+    branches: 
+      - '*'
+    paths-ignore:
+      - 'main/**'
+
+  workflow_dispatch:
+
+env:
+  PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Pulumi
+        uses: pulumi/actions/setup-pulumi@v1
+        
+        
+      - name: Login to Pulumi
+        run: |
+          echo "Logging into Pulumi..."
+          pulumi login --cloud-url https://api.pulumi.com --access-token ${PULUMI_ACCESS_TOKEN}
+
+      - name: Deploy Pulumi Stack
+        run: |
+          echo "Deploying main branch to development environment..."
+          pulumi stack select dev
+          pulumi up --yes
+
+      - name: Finish message
+        run: echo "Finished development deployment"
+
