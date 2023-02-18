@@ -44,7 +44,7 @@ jobs:
         run: |
           echo "Deploying main branch to development environment..."
           pulumi stack select JonathanYK/candidatesP/dev
-          pulumi up --yes
+
 
       - name: Finish message
         run: echo "Finished development deployment"
