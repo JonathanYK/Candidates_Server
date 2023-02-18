@@ -34,7 +34,7 @@ jobs:
       - name: After setting up the Pulumi project specific language environment, we need to install the dependencies also
         run: |
          npm install
-         echo $PATH
+
 
 
         
@@ -43,6 +43,7 @@ jobs:
           echo "Logging into Pulumi..."
           pulumi login --cloud-url https://api.pulumi.com
           export PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}
+                   echo $PATH
 
       - name: Deploy Pulumi Stack
         run: |
