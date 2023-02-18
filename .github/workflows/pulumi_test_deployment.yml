@@ -41,7 +41,7 @@ jobs:
         run: npm install
         
       - name: Run dev
-        run: npm run dev
+        run: node index.js
       
       - name: Deploy Pulumi Stack
         run: |
