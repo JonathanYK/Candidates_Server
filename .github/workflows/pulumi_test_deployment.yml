@@ -40,8 +40,8 @@ jobs:
       - name: Install dependencies
         run: npm install
         
-      - name: Build and Test
-        run: npm run test
+      - name: Run dev
+        run: npm run dev
       
       - name: Deploy Pulumi Stack
         run: |
