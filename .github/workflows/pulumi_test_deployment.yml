@@ -30,7 +30,11 @@ jobs:
       - name: Set up Pulumi
         uses: pulumi/setup-pulumi@v2
 
-        
+      - name: Install Pulumi CLI
+        run: |
+         curl -fsSL https://get.pulumi.com/ | sh
+         export PATH=$PATH:/root/.pulumi/bin
+
         
       - name: Login to Pulumi
         run: |
