@@ -37,12 +37,12 @@ jobs:
           echo "Logging into Pulumi..."
           pulumi login --cloud-url https://api.pulumi.com
           export PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}
+          pulumi stack output stack
 
 
       - name: Deploy Pulumi Stack
         run: |
           echo "Deploying main branch to development environment..."
-          pulumi stack output stack
           pulumi stack select dev
           pulumi up --yes
 
