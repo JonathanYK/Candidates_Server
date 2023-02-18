@@ -46,6 +46,7 @@ jobs:
       - name: Deploy Pulumi Stack
         run: |
           echo "Deploying main branch to development environment..."
+          npm install
           pulumi stack select JonathanYK/candidatesP/dev
           pulumi up --yes
 
