@@ -40,8 +40,6 @@ jobs:
       - name: Deploy Pulumi Stack
         run: |
           echo "Deploying main branch to development environment..."
-          ls
-          cd Candidates_Server
           npm install
           pulumi stack select JonathanYK/candidatesP/dev
           echo "$HOME/.pulumi/bin" >> $GITHUB_PATH # Add the pulumi binary directory to the system's PATH
