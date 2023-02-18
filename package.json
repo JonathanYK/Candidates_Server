@@ -3,7 +3,7 @@
   "version": "1.0.0",
     "dependencies": {
     "@pulumi/pulumi": "^3.55.0"
-  }
+  },
   "description": "",
   "main": "index.js",
   "scripts": {
