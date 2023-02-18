@@ -32,19 +32,9 @@ jobs:
           
           
       - name: After setting up the Pulumi project specific language environment, we need to install the dependencies also
-        run: npm install
-
-      - name: Check and update Pulumi SDK version
         run: |
-         echo "Checking Pulumi SDK version..."
-         LATEST_SDK_VERSION=$(curl -s https://www.npmjs.com/package/@pulumi/pulumi | grep 'Latest version' | sed -E 's/^.*\(([0-9]+\.[0-9]+\.[0-9]+)\).*$/\1/')
-         INSTALLED_SDK_VERSION=$(pulumi version | jq -r '.version')
-         if [[ $LATEST_SDK_VERSION != $INSTALLED_SDK_VERSION ]]; then
-            echo "Updating Pulumi SDK to version $LATEST_SDK_VERSION..."
-            npm install -g @pulumi/pulumi@"$LATEST_SDK_VERSION"
-         else
-            echo "Pulumi SDK is up to date."
-         fi
+         npm install
+         echo $PATH
 
 
         
