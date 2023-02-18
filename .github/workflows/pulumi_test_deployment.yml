@@ -35,13 +35,11 @@ jobs:
           echo "Logging into Pulumi..."
           pulumi login --cloud-url https://api.pulumi.com
           export PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}
-
+          echo "$HOME/.pulumi/bin" >> $GITHUB_PATH # Add the pulumi binary directory to the system's PATH
 
       - name: Deploy Pulumi Stack
         run: |
           echo "Deploying main branch to development environment..."
-          echo "$HOME/.pulumi/bin" >> $GITHUB_PATH # Add the pulumi binary directory to the system's PATH
-          npm install
           pulumi stack select JonathanYK/candidatesP/dev
           pulumi up --yes
 
