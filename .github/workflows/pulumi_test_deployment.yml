@@ -29,6 +29,8 @@ jobs:
         
       - name: Set up Pulumi
         uses: pulumi/setup-pulumi@v2
+              pulumi/action-install-pulumi@v1
+
         
         
       - name: Login to Pulumi
