@@ -1,3 +1,9 @@
 name: candidatesP
 runtime: nodejs
 description: A minimal AWS TypeScript Pulumi program
+
+workflows:
+  deploy:
+    steps:
+      - name: Install dependencies
+        install: npm install
