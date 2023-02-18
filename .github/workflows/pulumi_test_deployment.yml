@@ -27,15 +27,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         
-      - name: Set up Pulumi
-        uses: pulumi/setup-pulumi@v2
+      - name: In order to use the Pulumi v2 action, we need to setup the Pulumi project specific language environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+          
+          
+      - name: After setting up the Pulumi project specific language environment, we need to install the dependencies also
+        run: npm install
+
+      - name: Install Pulumi CLI
+        uses: pulumi/action-install-pulumi-cli@v1.0.1
+
+      - uses: pulumi/actions@v2
+        with:
+          command: preview
+          stack-name: dev
+          
         
       - name: Login to Pulumi
         run: |
           echo "Logging into Pulumi..."
           pulumi login --cloud-url https://api.pulumi.com
           export PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}
-          echo "$HOME/.pulumi/bin" >> $GITHUB_PATH # Add the pulumi binary directory to the system's PATH
 
       - name: Deploy Pulumi Stack
         run: |
