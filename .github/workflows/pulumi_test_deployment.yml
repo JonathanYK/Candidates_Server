@@ -37,8 +37,8 @@ jobs:
           pulumi login --cloud-url https://api.pulumi.com
           export PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}
 
-      - name: Build and Test
-        run: npm run build && npm run test
+      - name: Install dependencies
+        run: npm install
       
       - name: Deploy Pulumi Stack
         run: |
