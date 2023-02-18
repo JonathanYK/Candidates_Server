@@ -29,12 +29,6 @@ jobs:
         
       - name: Set up Pulumi
         uses: pulumi/setup-pulumi@v2
-
-      - name: Install Pulumi CLI
-        run: |
-         curl -fsSL https://get.pulumi.com/ | sh
-         export PATH=$PATH:/root/.pulumi/bin
-
         
       - name: Login to Pulumi
         run: |
@@ -46,8 +40,11 @@ jobs:
       - name: Deploy Pulumi Stack
         run: |
           echo "Deploying main branch to development environment..."
+          ls
+          cd Candidates_Server
           npm install
           pulumi stack select JonathanYK/candidatesP/dev
+          echo "$HOME/.pulumi/bin" >> $GITHUB_PATH # Add the pulumi binary directory to the system's PATH
           pulumi up --yes
 
 
