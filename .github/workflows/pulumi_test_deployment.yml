@@ -39,11 +39,7 @@ jobs:
       - name: Install Pulumi CLI
         uses: pulumi/setup-pulumi@v2
 
-      - uses: pulumi/actions@v2
-        with:
-          command: preview
-          stack-name: dev
-          
+
         
       - name: Login to Pulumi
         run: |
