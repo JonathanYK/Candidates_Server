@@ -42,7 +42,7 @@ jobs:
       - name: Deploy Pulumi Stack
         run: |
           echo "Deploying main branch to development environment..."
-          pulumi stack select dev
+
           pulumi up --yes
 
       - name: Finish message
