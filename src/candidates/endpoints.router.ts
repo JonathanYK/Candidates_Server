@@ -3,6 +3,16 @@ import express, { Request, Response } from "express";
 export const router = express.Router();
 const { getClient } = require('./getClient');
 
+// GET main page
+router.get("/", async (e, res: Response, next) => { 
+  try {
+    res.send('<h2 style="color:DodgerBlue;"><i>Welcome to candidates main page!</i></h2>');
+  
+    } catch (e) {
+      res.status(503).send(e.message);
+    }
+  });
+
 // GET health check
 router.get("/health", async (e, res: Response, next) => { 
 
