@@ -292,15 +292,18 @@ pulumi.all([rdsEndpoint, rdsPort, rdsDbName, rdsUsername, rdsPassword]).apply(([
   const rdsPasswordArg = `${rdsPassword}`;
   const args = [endpointArg, portArg, rdsDbNameArg, rdsUsernameArg, rdsPasswordArg];
 
-  const scriptPath = '../initUsersTable.py';
-  const process = childProcess.spawn('python', [scriptPath, ...args]);
+  const initUsersScriptPath = '../initUsersTable.py';
+  const initUsersScriptName = initUsersScriptPath.substring(initUsersScriptPath.lastIndexOf("/") + 1);
+  const process = childProcess.spawn('python', [initUsersScriptPath, ...args]);
 
-  process.stdout.on('data', (data: any) => {
-      console.log(`stdout: ${data}`);
+  process.stdout.on('data', (initUserScriptData: string) => {
+    console.log(`Executing ${initUsersScriptName}:`);
+    console.log(`${initUserScriptData}`);
   });
 
-  process.stderr.on('data', (data: any) => {
-      console.error(`stderr: ${data}`);
+  process.stderr.on('data', (initUserScriptData: string) => {
+    console.log(`Executing ${initUsersScriptName} FAILED:`);
+    console.error(`stderr: ${initUserScriptData}`);
   });
 });
 
