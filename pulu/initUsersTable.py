@@ -1,5 +1,6 @@
 import sys
 import psycopg2
+from psycopg2 import Error
 
 # Get the arguments passed to the Python script
 args = sys.argv
@@ -10,37 +11,47 @@ db_name = args[3]
 db_user = args[4]
 db_password = args[5]
 
+create_table_name = "users"
+
 #debug remove:
 print("db_host: " + db_host + " db_port:" + db_port + " db_name:" + db_name + " db_user:" + db_user + " db_password:" + db_password)
 
-
-# Connect to the database
-conn = psycopg2.connect(
-    host=db_host,
-    port=db_port,
-    dbname=db_name,
-    user=db_user,
-    password=db_password
-)
-
-# Open a cursor to execute SQL queries
-cur = conn.cursor()
-
-
-createUsersTableQuery = """
-CREATE TABLE users (
-    candId INTEGER,
-    candName character varying(255) NOT NULL,
-    candEmail character varying(255) NOT NULL UNIQUE
+try:
+    # Connect to the database
+    connection = psycopg2.connect(
+        host=db_host,
+        port=db_port,
+        dbname=db_name,
+        user=db_user,
+        password=db_password
     )
-    """
 
-# Execute createUsersTableQuery command to create users table
-cur.execute(createUsersTableQuery)
+    # Open a cursor to execute SQL queries
+    cursor  = connection.cursor()
 
-# Commit the transaction to save the changes
-conn.commit()
+    print(f"""Connected to {db_host}, creating "{create_table_name}" table.""")
+    createUsersTableQuery = f"""
+    CREATE TABLE {create_table_name} (
+        candId INTEGER,
+        candName character varying(255) NOT NULL,
+        candEmail character varying(255) NOT NULL UNIQUE
+        )
+        """
 
-# Close the cursor and database connection
-cur.close()
-conn.close()
+    # Execute createUsersTableQuery command to create users table
+    cursor.execute(createUsersTableQuery)
+
+    # Commit the transaction to save the changes
+    connection.commit()
+
+except psycopg2.errors.DuplicateTable:
+    print(f"""Table "{create_table_name}" already exists.""")
+
+except (Exception, Error) as error:
+    print("Error while connecting to PostgreSQL on RDS: ", error)
+
+finally:
+    if connection:
+        cursor.close()
+        connection.close()
+        print("PostgreSQL RDS connection is closed.")
