@@ -1,7 +1,8 @@
-import * as pulumi from "@pulumi/pulumi";
+import * as pulumi from "@pulumi/pulumi"
 import * as aws from "@pulumi/aws";
 import * as awsx from "@pulumi/awsx";
 import * as docker from "@pulumi/docker";
+import * as childProcess from 'child_process';
 
 const availabilityZoneA: string = "us-east-1a";
 const availabilityZoneB: string = "us-east-1b";
@@ -29,6 +30,8 @@ const vpcGw = new aws.ec2.InternetGateway("cand-vpc-gw", {
 export const vpcGwId = vpcGw.id;
 
 
+
+// at the END- change to specific ips and ports
 // candidate main security group
 const candSg = new aws.ec2.SecurityGroup("cand-security-group", {
   vpcId: candVpc.id,
@@ -179,40 +182,63 @@ const candNatGatewayPrivSub1 = new aws.ec2.NatGateway("cand-nat-gw-priv-subnet-1
 export const candNatGatewayPrivSub1Id = candNatGatewayPrivSub1.id;
 
 
-// nat gw for private subnet 2
-const candNatGatewayPrivSub2 = new aws.ec2.NatGateway("cand-nat-gw-priv-subnet-2", {
-  subnetId: candPrivateSubnet2.id,
-  allocationId: candEip.id,
-  tags: {
-    Name: "cand-nat-gw-priv-subnet-2"
-  }
-});
-export const candNatGatewayPrivSub2Id = candNatGatewayPrivSub2.id;
-
-
 // RDS resources
 // rds public subnet 1
 const candRDSPublicSubnet1 = new aws.ec2.Subnet("cand-rds-pub-subnet1", {
   vpcId: candVpc.id,
   cidrBlock: "10.0.11.0/24",
   availabilityZone: availabilityZoneRDSc,
+  mapPublicIpOnLaunch: true,
   tags: {
     Name: "cand-rds-pub-subnet1"
   }
 });
 export const candRDSPublicSubnet1Id = candRDSPublicSubnet1.id;
 
-
 // rds public subnet 2
 const candRDSPublicSubnet2 = new aws.ec2.Subnet("cand-rds-pub-subnet2", {
   vpcId: candVpc.id,
   cidrBlock: "10.0.12.0/24",
   availabilityZone: availabilityZoneRDSd,
+  mapPublicIpOnLaunch: true,
   tags: {
     Name: "cand-rds-pub-subnet2"
   }
 });
 export const candRDSPublicSubnet2Id = candRDSPublicSubnet2.id;
+
+
+// Route table for public subnets
+const candPublicRdsRouteTable = new aws.ec2.RouteTable("cand-publ-rds-routetable", {
+  vpcId: candVpc.id,
+  tags: {
+      Name: "cand-publ-rds-routetable"
+  }
+});
+export const candPublicRdsRouteTableId = candPublicRdsRouteTable.id;
+
+// Route to the Internet Gateway for public subnets
+const publicRouteRds = new aws.ec2.Route("public-route-rds", {
+  routeTableId: candPublicRdsRouteTable.id,
+  destinationCidrBlock: "0.0.0.0/0",
+  gatewayId: vpcGw.id,
+});
+export const publicRouteRdsId = publicRouteRds.id;
+
+
+// Associate candRDSPublicSubnet1 with the public route table
+const publicSubnetAssociationSub1Rds = new aws.ec2.RouteTableAssociation("cand-publ-rds-subnet-1-routetable-association", {
+  subnetId: candRDSPublicSubnet1.id,
+  routeTableId: candPublicRdsRouteTable.id,
+});
+export const publicSubnetAssociationSub1RdsId = publicSubnetAssociationSub1Rds.id;
+
+// Associate candRDSPublicSubnet2 with the public route table
+const publicSubnetAssociationSub2Rds = new aws.ec2.RouteTableAssociation("cand-publ-rds-subnet-2-routetable-association", {
+  subnetId: candRDSPublicSubnet2.id,
+  routeTableId: candPublicRdsRouteTable.id,
+});
+export const publicSubnetAssociationSub2RdsId = publicSubnetAssociationSub2Rds.id;
 
 
 // rds subnet group
@@ -231,14 +257,16 @@ export const rdsSubnetGroupId = rdsSubnetGroup.id;
 // rds PostgreSQL database instance
 const pgInstance = new aws.rds.Instance("postgres-instance", {
   dbSubnetGroupName: rdsSubnetGroup.name,
-  allocatedStorage: 5,
+  allocatedStorage: 20,
   engine: "postgres",
   engineVersion: "11.19",
-  instanceClass: "db.t2.micro",
-  name: "canddatabase",
-  password: "mypassword", // from aws secrets
-  username: "myusername",
-  skipFinalSnapshot: true,
+  instanceClass: "db.t3.micro",
+  dbName: "canddatabase",
+  username: "postgres",
+  password: "postgres", // from aws secrets
+  publiclyAccessible: true,
+  port: 5432,
+
   tags: {
     Name: "cand-postgres-instance"
   },
@@ -249,6 +277,32 @@ export const databaseEndpoint = pgInstance.endpoint;
 
 // // Export the connection string
 // //export const connectionString = pulumi.interpolate`postgres://${dbInstance.username}:${dbInstance.password}@${dbInstance.endpoint}/${dbInstance.name}`;
+
+const rdsEndpoint = pgInstance.endpoint.apply(endpoint => endpoint);
+const rdsPort = pgInstance.port.apply(port => port);
+const rdsDbName = pgInstance.dbName.apply(dbName => dbName);
+const rdsUsername = pgInstance.username.apply(username => username);
+const rdsPassword = pgInstance.password.apply(password => password);
+
+pulumi.all([rdsEndpoint, rdsPort, rdsDbName, rdsUsername, rdsPassword]).apply(([rdsEndpoint, rdsPort, rdsDbName, rdsUsername, rdsPassword]) => {
+  const endpointArg = `${rdsEndpoint}`;
+  const portArg = `${rdsPort}`;
+  const rdsDbNameArg = `${rdsDbName}`;
+  const rdsUsernameArg = `${rdsUsername}`;
+  const rdsPasswordArg = `${rdsPassword}`;
+  const args = [endpointArg, portArg, rdsDbNameArg, rdsUsernameArg, rdsPasswordArg];
+
+  const scriptPath = '../initUsersTable.py';
+  const process = childProcess.spawn('python', [scriptPath, ...args]);
+
+  process.stdout.on('data', (data: any) => {
+      console.log(`stdout: ${data}`);
+  });
+
+  process.stderr.on('data', (data: any) => {
+      console.error(`stderr: ${data}`);
+  });
+});
 
 
 // ecr repository to store the Docker image.
@@ -347,14 +401,18 @@ const candService = new awsx.ecs.FargateService("cand-fargate-service", {
           image: fullImageName,
           cpu: 256,
           memory: 128,
+          environment: [{
+            name: "DB_HOST",
+            value: pgInstance.endpoint,
+        }],
           portMappings: [{ 
             containerPort: 8085,
           }],
         },
       },
+      
     },
     tags: {
       Name: "cand-fargate-service"
     },
 }, fargateServiceOptions);
-export const candServiceId = candService.service.id;
