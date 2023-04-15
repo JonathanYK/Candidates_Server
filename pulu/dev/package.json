@@ -16,7 +16,6 @@
         "pulumi": "^0.0.1",
         "python-shell": "^5.0.0",
         "secrets": "^1.1.5",
-        "synchronous-promise": "^2.0.17",
-		"psycopg2": "^2.9.1"
+        "synchronous-promise": "^2.0.17"
     }
 }
