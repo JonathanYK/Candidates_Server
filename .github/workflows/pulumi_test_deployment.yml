@@ -42,6 +42,7 @@ jobs:
       - name: Deployment preperation to dev stack
         run: |          
           echo "Installing dependencies"
+          cd ./pulu/dev
           npm install
           pip install psycopg2
           
