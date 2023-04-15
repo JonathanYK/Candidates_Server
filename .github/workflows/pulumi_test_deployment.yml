@@ -1,6 +1,7 @@
 
-name: CI Pulumi Deployment to Development
+name: CI Pulumi Deployment to Development Stack
 
+ # In case of push or pull request event to any branch except 'main' triggers this action
 on:
   push:
     branches:  
@@ -12,14 +13,15 @@ on:
       - '*'
     paths-ignore:
       - 'main/**'
-
+      
+ # In order to manually trigger this action
   workflow_dispatch:
-
+  
 env:
-  PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+  AWS_REGION: "us-east-1"
   
 jobs:
-  deploy:
+  deploy-update-aws-environment:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,14 +32,13 @@ jobs:
       - name: Set up Pulumi
         uses: pulumi/setup-pulumi@v2
         
-        
-      - name: Login to Pulumi
+      - name: Login to Pulumi user
         run: |
-          echo "Logging into Pulumi..."
+          echo "Logging into Pulumi"
           pulumi login --cloud-url https://api.pulumi.com
-          export PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}
+      # export PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}
 
-      - name: Deploy Pulumi Stack
+      - name: Deployment preperation to dev stack
         run: |
           echo "Changing directory to dev stack"
           cd ./pulu/dev
@@ -46,15 +47,19 @@ jobs:
           npm install
           pip install psycopg2
           
+      - name: AWS and Docker Configuration 
+        run: |
           echo "Configuring AWS credentials"
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
-          aws configure set default.region "us-east-1"
+          aws configure set default.region "${{ env.AWS_REGION }}"
           
           echo "Configuring Docker credentials"
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/my-repository-3f2b6e3
-          
-          echo "Deploying main branch to development environment..."
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username ${{ secrets.AWS_ACCOUNT_USERNAME }} --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/my-repository-3f2b6e3
+       
+      - name: Actual deployment to AWS environment
+        run: |
+          echo "Deploying and updating aws environment according to pulumi dev stack"
           pulumi stack select dev
           pulumi up --yes
 
