@@ -39,8 +39,14 @@ jobs:
 
       - name: Deploy Pulumi Stack
         run: |
+          echo "Changing directory to dev stack"
           cd ./pulu/dev
+          echo "Installing dependencies"
           npm install
+          echo "Configuring AWS credentials"
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
+          aws configure set default.region "us-east-1"
           echo "Deploying main branch to development environment..."
           pulumi stack select dev
           pulumi up --yes
