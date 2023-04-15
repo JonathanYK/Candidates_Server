@@ -2,15 +2,21 @@
     "name": "pulu-aws-candidate",
     "main": "index.ts",
     "devDependencies": {
-        "@types/node": "^16"
+        "@types/node": "^16.18.23"
     },
     "dependencies": {
+        "@aws-sdk/client-secrets-manager": "^3.309.0",
+        "@jwerre/secrets": "^2.0.1",
         "@pulumi/aws": "^5.0.0",
         "@pulumi/awsx": "^1.0.0",
         "@pulumi/command": "^0.7.1",
         "@pulumi/postgresql": "^3.8.0",
         "@pulumi/pulumi": "^3.61.0",
+        "fs": "^0.0.1-security",
         "pulumi": "^0.0.1",
-        "python-shell": "^5.0.0"
+        "python-shell": "^5.0.0",
+        "secrets": "^1.1.5",
+        "synchronous-promise": "^2.0.17",
+		"psycopg2": "^2.9.1"
     }
 }
