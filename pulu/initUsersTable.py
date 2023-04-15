@@ -1,6 +1,5 @@
 import sys
 import psycopg2
-from psycopg2 import Error
 
 # Get the arguments passed to the Python script
 args = sys.argv
@@ -20,7 +19,7 @@ try:
     # Connect to the database
     connection = psycopg2.connect(
         host=db_host,
-        port=db_port,
+        port=str(db_port),
         dbname=db_name,
         user=db_user,
         password=db_password
@@ -47,11 +46,17 @@ try:
 except psycopg2.errors.DuplicateTable:
     print(f"""Table "{create_table_name}" already exists.""")
 
-except (Exception, Error) as error:
-    print("Error while connecting to PostgreSQL on RDS: ", error)
+except (Exception, psycopg2.Error) as error:
+    print(f"Error while connecting to PostgreSQL on RDS: {error}")
 
 finally:
-    if connection:
-        cursor.close()
-        connection.close()
-        print("PostgreSQL RDS connection is closed.")
+    try:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+            print("PostgreSQL RDS connection is closed.")
+
+    except (Exception, psycopg2.Error) as error:
+        print(f"Error while closing PostgreSQL RDS connection: {error}")
+

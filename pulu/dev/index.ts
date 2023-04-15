@@ -3,6 +3,7 @@ import * as aws from "@pulumi/aws";
 import * as awsx from "@pulumi/awsx";
 import * as docker from "@pulumi/docker";
 import * as childProcess from 'child_process';
+import * as fs from 'fs';
 
 const availabilityZoneA: string = "us-east-1a";
 const availabilityZoneB: string = "us-east-1b";
@@ -11,9 +12,23 @@ const availabilityZoneRDSc: string = "us-east-1c";
 const availabilityZoneRDSd: string = "us-east-1d";
 
 
+// pull aws secrets:
+// Define the file path and content
+const filePath = "./awsSecrets.json";
+
+// Parse the JSON data into a JavaScript object
+const awsSecrets = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+
+
+
 // candidate main VPC
 const candVpc = new aws.ec2.Vpc("cand-vpc", {
     cidrBlock: "10.0.0.0/16",
+
+    // debug remove:
+    enableDnsSupport: true,
+    enableDnsHostnames: true,
+
     tags: {
       Name: "cand-vpc"
     }
@@ -29,20 +44,23 @@ const vpcGw = new aws.ec2.InternetGateway("cand-vpc-gw", {
 });
 export const vpcGwId = vpcGw.id;
 
-
-
-// at the END- change to specific ips and ports
 // candidate main security group
 const candSg = new aws.ec2.SecurityGroup("cand-security-group", {
   vpcId: candVpc.id,
 
   ingress: [{
-    protocol: "-1",
-    fromPort: 0,
-    toPort: 0,
+    protocol: "tcp",
+    fromPort: 8085,
+    toPort: 8085,
     cidrBlocks: ["0.0.0.0/0"],
 
-  }],
+  }, {
+    protocol: "tcp",
+    fromPort: 5432,
+    toPort: 5432,
+    cidrBlocks: ["0.0.0.0/0"],
+  },
+],
   egress: [{
       fromPort: 0,
       toPort: 0,
@@ -253,48 +271,37 @@ const rdsSubnetGroup = new aws.rds.SubnetGroup("cand-rds-subnet-group", {
 });
 export const rdsSubnetGroupId = rdsSubnetGroup.id;
 
-
+  
 // rds PostgreSQL database instance
 const pgInstance = new aws.rds.Instance("postgres-instance", {
+  vpcSecurityGroupIds: [candSg.id],
   dbSubnetGroupName: rdsSubnetGroup.name,
   allocatedStorage: 20,
-  engine: "postgres",
+  engine: awsSecrets.engine,
   engineVersion: "11.19",
   instanceClass: "db.t3.micro",
-  dbName: "canddatabase",
-  username: "postgres",
-  password: "postgres", // from aws secrets
+  dbName: awsSecrets.dbname,
+  port: awsSecrets.port,
+  username: awsSecrets.username,
+  password: awsSecrets.password,
+  skipFinalSnapshot: true,
   publiclyAccessible: true,
-  port: 5432,
-
+  
   tags: {
     Name: "cand-postgres-instance"
   },
 });
-export const pgInstanceId = pgInstance.id;
-// Output the endpoint URL for the instance
-export const databaseEndpoint = pgInstance.endpoint;
-
-// // Export the connection string
-// //export const connectionString = pulumi.interpolate`postgres://${dbInstance.username}:${dbInstance.password}@${dbInstance.endpoint}/${dbInstance.name}`;
 
 const rdsEndpoint = pgInstance.endpoint.apply(endpoint => endpoint);
-const rdsPort = pgInstance.port.apply(port => port);
-const rdsDbName = pgInstance.dbName.apply(dbName => dbName);
-const rdsUsername = pgInstance.username.apply(username => username);
-const rdsPassword = pgInstance.password.apply(password => password);
 
-pulumi.all([rdsEndpoint, rdsPort, rdsDbName, rdsUsername, rdsPassword]).apply(([rdsEndpoint, rdsPort, rdsDbName, rdsUsername, rdsPassword]) => {
-  const endpointArg = `${rdsEndpoint}`;
-  const portArg = `${rdsPort}`;
-  const rdsDbNameArg = `${rdsDbName}`;
-  const rdsUsernameArg = `${rdsUsername}`;
-  const rdsPasswordArg = `${rdsPassword}`;
-  const args = [endpointArg, portArg, rdsDbNameArg, rdsUsernameArg, rdsPasswordArg];
+// create talble "users" in RDS PostgreSQL if not exists
+pulumi.all([rdsEndpoint]).apply(([rdsEndpoint]) => {
+
+  const secretArgs = [rdsEndpoint, awsSecrets.port, awsSecrets.dbname, awsSecrets.username, awsSecrets.password];
 
   const initUsersScriptPath = '../initUsersTable.py';
   const initUsersScriptName = initUsersScriptPath.substring(initUsersScriptPath.lastIndexOf("/") + 1);
-  const process = childProcess.spawn('python', [initUsersScriptPath, ...args]);
+  const process = childProcess.spawn('python', [initUsersScriptPath, ...secretArgs]);
 
   process.stdout.on('data', (initUserScriptData: string) => {
     console.log(`Executing ${initUsersScriptName}:`);
@@ -334,6 +341,10 @@ const candCluster = new aws.ecs.Cluster("cand-cluster", {
     Name: "cand-ecs-cluster"
   },
 });
+const candClusterName = candCluster.name.apply(candCluster => candCluster);
+
+
+
 
 // cand application loadbalancer
 const candLb = new aws.lb.LoadBalancer("cand-alb", {
@@ -384,38 +395,131 @@ const fargateServiceOptions: pulumi.ResourceOptions = {
 };
 
 
-// cand fargate service
-const candService = new awsx.ecs.FargateService("cand-fargate-service", {
-    cluster: candCluster.arn,
-    desiredCount: 1,
-    
-    networkConfiguration: {
-      assignPublicIp: true,
-      securityGroups: [candSg.id],
-      subnets: [candPublicSubnet1.id, candPublicSubnet2.id],
+// Create a CloudWatch Log Group with retention
+const logGroup = new aws.cloudwatch.LogGroup("cand-log-group", {
+  retentionInDays: 1,
+  tags: {
+    Name: "cand-log-group"
   },
-    
-    taskDefinitionArgs: {
-      containers: {
+});
 
-        // main cand container
-        candImage: {
-          name: candImgName,
-          image: fullImageName,
-          cpu: 256,
-          memory: 128,
-          environment: [{
+// Export the log group
+export const logGroupId = logGroup.id;
+
+// cand fargate service
+const candFargateService = new awsx.ecs.FargateService("cand-fargate-service", {
+  
+  cluster: candCluster.arn,
+  desiredCount: 1,
+  
+  networkConfiguration: {
+    assignPublicIp: true,
+    securityGroups: [candSg.id],
+    subnets: [candPublicSubnet1.id, candPublicSubnet2.id],
+},  
+  taskDefinitionArgs: {
+    containers: {
+      // main cand container
+      candImage: {
+        name: candImgName,
+        image: fullImageName,
+        cpu: 256,
+        memory: 128,
+        environment: [
+          {
             name: "DB_HOST",
             value: pgInstance.endpoint,
+          },
+          {
+            name: "DB_PORT",
+            value: `${awsSecrets.port}`,
+          },
+          {
+            name: "DB_USER",
+            value: awsSecrets.username,
+          },
+          {
+            name: "DB_PASS",
+            value: awsSecrets.password,
+          },
+          {
+            name: "DB_NAME",
+            value: awsSecrets.dbname,
+          },
+        ],
+        portMappings: [{ 
+          containerPort: 8085,
         }],
-          portMappings: [{ 
-            containerPort: 8085,
-          }],
-        },
       },
-      
-    },
-    tags: {
-      Name: "cand-fargate-service"
-    },
+    },        
+  },
+  tags: {
+    Name: "cand-fargate-service"
+  },
 }, fargateServiceOptions);
+export const candFargateServiceId = candFargateService.service.id;
+const candFargateServiceName = candFargateService.service.apply(service => service.name);
+
+
+const candDashboard = pulumi.all([]).apply(([]) => {
+
+  return  new aws.cloudwatch.Dashboard("candDashboard", {
+    dashboardName: "candDashboard",
+    dashboardBody: JSON.stringify({
+        widgets: [
+            {
+              type: "metric",
+              x: 0,
+              y: 8,
+              width: 6,
+              height: 6,
+              properties: {
+                metrics: [
+                  [
+                    "AWS/ECS",
+                    "CPUUtilization",                
+                    "ClusterName", 
+                    candClusterName,
+                    "ServiceName",
+                    candFargateServiceName,  
+                    {color: "#ff0000"} // red    
+                  ]
+                ],
+                period: 300,
+                stat: "Average",
+                region: "us-east-1",
+                title: "Candidate service Container CPU",
+              }
+            },
+            {
+              type: "metric",
+              x: 6,
+              y: 16,
+              width: 6,
+              height: 6,
+              properties: {
+                metrics: [
+                  [
+                    "AWS/ECS",
+                    "MemoryUtilization",                
+                    "ClusterName", 
+                    candClusterName,
+                    "ServiceName",
+                    candFargateServiceName,  
+                    {color: "#0200ff"} // blue  
+                  ]
+                ],
+                period: 300,
+                stat: "Average",
+                region: "us-east-1",
+                title: "Candidate service Container Memory",
+
+              }
+            } 
+        ],
+    }),
+  });
+});
+export const candDashboardId = candDashboard.id
+
+
