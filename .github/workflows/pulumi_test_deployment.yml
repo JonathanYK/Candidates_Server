@@ -43,6 +43,7 @@ jobs:
           cd ./pulu/dev
           echo "Installing dependencies"
           npm install
+          pip install psycopg2
           echo "Configuring AWS credentials"
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
