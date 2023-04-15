@@ -12,6 +12,5 @@
         "@pulumi/pulumi": "^3.61.0",
         "pulumi": "^0.0.1",
         "python-shell": "^5.0.0",
-        "psycopg2": "^2.9.1"
     }
 }
