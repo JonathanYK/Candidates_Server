@@ -43,9 +43,10 @@ jobs:
           export PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}
 
       - name: Deployment preperation to dev stack
+        working-directory: ./pulu/dev
         run: |          
           echo "Installing dependencies"
-          pulumi stack --stack dev --cwd ./pulu/dev install
+          npm install
           pip install psycopg2
           
       - name: Amazon Cloud and Docker Configuration 
@@ -59,11 +60,11 @@ jobs:
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username ${{ secrets.AWS_ACCOUNT_USERNAME }} --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/my-repository-3f2b6e3
        
       - name: Actual deployment to Amazon Cloud environment
+        working-directory: ./pulu/dev
         run: |
           echo "Deploying and updating aws environment according to pulumi dev stack"
-          cd ./pulu/dev
-          pulumi stack --stack dev --cwd ./pulu/dev select
-          pulumi stack --stack dev --cwd ./pulu/dev up --yes
+          pulumi stack select dev
+          pulumi up --yes
 
       - name: Deployment finish message
         run: echo "Finished pulumi dev stack deployment successfully!"
