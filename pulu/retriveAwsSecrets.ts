@@ -1,5 +1,5 @@
 import { SecretsManagerClient, GetSecretValueCommand, } from "@aws-sdk/client-secrets-manager";
-import * as fs from 'fs';
+import * as fs from "fs";
 
 
 // Define the file path and content

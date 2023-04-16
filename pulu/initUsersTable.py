@@ -12,9 +12,6 @@ db_password = args[5]
 
 create_table_name = "users"
 
-#debug remove:
-print("db_host: " + db_host + " db_port:" + db_port + " db_name:" + db_name + " db_user:" + db_user + " db_password:" + db_password)
-
 try:
     # Connect to the database
     connection = psycopg2.connect(

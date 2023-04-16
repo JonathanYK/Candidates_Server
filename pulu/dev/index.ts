@@ -12,13 +12,12 @@ const availabilityZoneRDSc: string = "us-east-1c";
 const availabilityZoneRDSd: string = "us-east-1d";
 
 
-// pull aws secrets:
+// pull aws secrets
 // Define the file path and content
-const filePath = "./awsSecrets.json";
+const filePath = "../awsSecrets.json";
 
 // Parse the JSON data into a JavaScript object
 const awsSecrets = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-
 
 
 // candidate main VPC
@@ -28,12 +27,12 @@ const candVpc = new aws.ec2.Vpc("cand-vpc", {
     // debug remove:
     enableDnsSupport: true,
     enableDnsHostnames: true,
-
     tags: {
       Name: "cand-vpc"
     }
 });
 export const candVpcId = candVpc.id;
+
 
 // candidate main internet gw
 const vpcGw = new aws.ec2.InternetGateway("cand-vpc-gw", {
@@ -44,17 +43,20 @@ const vpcGw = new aws.ec2.InternetGateway("cand-vpc-gw", {
 });
 export const vpcGwId = vpcGw.id;
 
+
 // candidate main security group
 const candSg = new aws.ec2.SecurityGroup("cand-security-group", {
   vpcId: candVpc.id,
 
   ingress: [{
+    // candImage
     protocol: "tcp",
     fromPort: 8085,
     toPort: 8085,
     cidrBlocks: ["0.0.0.0/0"],
 
   }, {
+    // postgreSQL RDS
     protocol: "tcp",
     fromPort: 5432,
     toPort: 5432,
@@ -73,6 +75,7 @@ const candSg = new aws.ec2.SecurityGroup("cand-security-group", {
 });
 export const candSgId = candSg.id;
 
+
 // candidate main eip
 const candEip = new aws.ec2.Eip("cand-eip-nat", {
   vpc: true,
@@ -81,6 +84,7 @@ const candEip = new aws.ec2.Eip("cand-eip-nat", {
   }
 });
 export const candEipId = candEip.id;
+
 
 // candidate public subnet 1
 const candPublicSubnet1 = new aws.ec2.Subnet("cand-pub-subnet-1", {
@@ -93,6 +97,7 @@ const candPublicSubnet1 = new aws.ec2.Subnet("cand-pub-subnet-1", {
   }
 });
 export const candPublicSubnet1Id = candPublicSubnet1.id;
+
 
 // candidate public subnet 2
 const candPublicSubnet2 = new aws.ec2.Subnet("cand-pub-subnet-2", {
@@ -138,6 +143,7 @@ export const publicSubnetAssociationSub1Id = publicSubnetAssociationSub1.id;
 const publicSubnetAssociationSub2 = new aws.ec2.RouteTableAssociation("cand-publ-subnet-2-routetable-association", {
   subnetId: candPublicSubnet2.id,
   routeTableId: candPublicRouteTable.id,
+  
 });
 export const publicSubnetAssociationSub2Id = publicSubnetAssociationSub2.id;
 
@@ -213,6 +219,7 @@ const candRDSPublicSubnet1 = new aws.ec2.Subnet("cand-rds-pub-subnet1", {
 });
 export const candRDSPublicSubnet1Id = candRDSPublicSubnet1.id;
 
+
 // rds public subnet 2
 const candRDSPublicSubnet2 = new aws.ec2.Subnet("cand-rds-pub-subnet2", {
   vpcId: candVpc.id,
@@ -226,7 +233,7 @@ const candRDSPublicSubnet2 = new aws.ec2.Subnet("cand-rds-pub-subnet2", {
 export const candRDSPublicSubnet2Id = candRDSPublicSubnet2.id;
 
 
-// Route table for public subnets
+// Route table for RDS public subnets
 const candPublicRdsRouteTable = new aws.ec2.RouteTable("cand-publ-rds-routetable", {
   vpcId: candVpc.id,
   tags: {
@@ -234,6 +241,7 @@ const candPublicRdsRouteTable = new aws.ec2.RouteTable("cand-publ-rds-routetable
   }
 });
 export const candPublicRdsRouteTableId = candPublicRdsRouteTable.id;
+
 
 // Route to the Internet Gateway for public subnets
 const publicRouteRds = new aws.ec2.Route("public-route-rds", {
@@ -291,9 +299,10 @@ const pgInstance = new aws.rds.Instance("postgres-instance", {
     Name: "cand-postgres-instance"
   },
 });
+export const pgInstanceId = pgInstance.id 
+
 
 const rdsEndpoint = pgInstance.endpoint.apply(endpoint => endpoint);
-
 // create talble "users" in RDS PostgreSQL if not exists
 pulumi.all([rdsEndpoint]).apply(([rdsEndpoint]) => {
 
@@ -321,7 +330,7 @@ export const candRepositoryId = candRepository.id;
 
 const candImageName = candRepository.repositoryUrl;
 const candImgName = "cand-image";
-const candImgVer = "v1.0.0"; 
+const candImgVer = "v1.0"; 
 
 // build and publish the container image.
 const candImage = new docker.Image(candImgName, {
@@ -330,6 +339,7 @@ const candImage = new docker.Image(candImgName, {
   },
   imageName: pulumi.interpolate`${candImageName}:${candImgVer}`,
 });
+
 
 // export the base and specific version image name.
 export const baseImageName = candImage.baseImageName;
@@ -342,8 +352,6 @@ const candCluster = new aws.ecs.Cluster("cand-cluster", {
   },
 });
 const candClusterName = candCluster.name.apply(candCluster => candCluster);
-
-
 
 
 // cand application loadbalancer
@@ -389,12 +397,6 @@ const candListener = new aws.lb.Listener("cand-listener-8085", {
 export const candListenerId = candListener.id;
 
 
-// unprotect resource (for force deletion)
-const fargateServiceOptions: pulumi.ResourceOptions = {
-  protect: false, // Set protect to false to unprotect the resource.
-};
-
-
 // Create a CloudWatch Log Group with retention
 const logGroup = new aws.cloudwatch.LogGroup("cand-log-group", {
   retentionInDays: 1,
@@ -402,9 +404,14 @@ const logGroup = new aws.cloudwatch.LogGroup("cand-log-group", {
     Name: "cand-log-group"
   },
 });
-
 // Export the log group
 export const logGroupId = logGroup.id;
+
+
+// unprotect resource (for force deletion)
+const fargateServiceOptions: pulumi.ResourceOptions = {
+  protect: false, // Set protect to false to unprotect the resource.
+};
 
 // cand fargate service
 const candFargateService = new awsx.ecs.FargateService("cand-fargate-service", {
@@ -423,6 +430,7 @@ const candFargateService = new awsx.ecs.FargateService("cand-fargate-service", {
       candImage: {
         name: candImgName,
         image: fullImageName,
+        
         cpu: 256,
         memory: 128,
         environment: [
@@ -447,6 +455,7 @@ const candFargateService = new awsx.ecs.FargateService("cand-fargate-service", {
             value: awsSecrets.dbname,
           },
         ],
+        
         portMappings: [{ 
           containerPort: 8085,
         }],
@@ -460,9 +469,10 @@ const candFargateService = new awsx.ecs.FargateService("cand-fargate-service", {
 export const candFargateServiceId = candFargateService.service.id;
 const candFargateServiceName = candFargateService.service.apply(service => service.name);
 
-
+// create Dashboard at the end:
 const candDashboard = pulumi.all([]).apply(([]) => {
 
+  candFargateService.taskDefinition
   return  new aws.cloudwatch.Dashboard("candDashboard", {
     dashboardName: "candDashboard",
     dashboardBody: JSON.stringify({
@@ -513,7 +523,6 @@ const candDashboard = pulumi.all([]).apply(([]) => {
                 stat: "Average",
                 region: "us-east-1",
                 title: "Candidate service Container Memory",
-
               }
             } 
         ],
@@ -521,5 +530,3 @@ const candDashboard = pulumi.all([]).apply(([]) => {
   });
 });
 export const candDashboardId = candDashboard.id
-
-
