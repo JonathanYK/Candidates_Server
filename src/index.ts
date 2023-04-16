@@ -23,7 +23,7 @@ app.use(router);
 
 
 function envVarValidation() {
-   let reqEnvVars: string[] = ['HOST', 'PORT', 'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASS', 'DB_NAME', 'DB_URL'];
+   let reqEnvVars: string[] = ['HOST', 'PORT', 'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASS', 'DB_NAME'];
    let terminate = false;
    for (var reqVar of reqEnvVars) {
       if (reqVar in process.env) {

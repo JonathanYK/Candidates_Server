@@ -1,5 +1,6 @@
 version: '3.8'
 services:
+
   web:
     build:
       context: ./
@@ -9,10 +10,9 @@ services:
     command: npm run dev
     ports:
       - "3001:3001"
-    #depends_on:
-    #  - db
+    depends_on:
+     - db
     environment:
-      - DATABASE_URL=${DB_URL}
       - PORT=${PORT}
       - POSTGRESPORT=${DB_PORT}
       - DB_NAME=${DB_NAME}
@@ -27,6 +27,7 @@ services:
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
     ports:
       - '${DB_PORT}:${DB_PORT}'
     volumes: 
@@ -40,3 +41,4 @@ volumes:
 
 networks:
   cb:
+    driver: bridge
