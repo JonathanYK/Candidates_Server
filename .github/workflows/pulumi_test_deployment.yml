@@ -32,7 +32,10 @@ jobs:
         
       - name: Set up Pulumi
         uses: pulumi/setup-pulumi@v2
-        
+        with:
+          version: 'latest'
+          cloud-url: 'https://api.pulumi.com'
+          
       - name: Login to Pulumi user
         run: |
           echo "Logging into Pulumi"
@@ -42,13 +45,12 @@ jobs:
       - name: Deployment preperation to dev stack
         run: |          
           echo "Installing dependencies"
-          cd ./pulu/dev
-          npm install
+          pulumi stack --stack dev --cwd ./pulu/dev install
           pip install psycopg2
           
-      - name: AWS and Docker Configuration 
+      - name: Amazon Cloud and Docker Configuration 
         run: |
-          echo "Configuring AWS credentials"
+          echo "Configuring Amazon Cloud credentials"
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
           aws configure set default.region "${{ env.AWS_REGION }}"
@@ -56,13 +58,13 @@ jobs:
           echo "Configuring Docker credentials"
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username ${{ secrets.AWS_ACCOUNT_USERNAME }} --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/my-repository-3f2b6e3
        
-      - name: Actual deployment to AWS environment
+      - name: Actual deployment to Amazon Cloud environment
         run: |
           echo "Deploying and updating aws environment according to pulumi dev stack"
           cd ./pulu/dev
-          pulumi stack select dev
-          pulumi up --yes
+          pulumi stack --stack dev --cwd ./pulu/dev select
+          pulumi stack --stack dev --cwd ./pulu/dev up --yes
 
-      - name: Finish message
-        run: echo "Finished development deployment"
+      - name: Deployment finish message
+        run: echo "Finished pulumi dev stack deployment successfully!"
 
