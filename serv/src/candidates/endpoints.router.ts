@@ -149,7 +149,7 @@ router.delete("/candidate", async (req: Request, res: Response) => {
         throw error
       }
       client.end();
-      res.status(200).send(`User modified with ID: ${req.query.candId}`)
+      res.status(200).send(`User deleted with ID: ${req.query.candId}`)
   });
 
   } catch (e) {
