@@ -57,7 +57,7 @@ jobs:
           aws configure set default.region "${{ env.AWS_REGION }}"
           
           echo "Configuring Docker credentials"
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username ${{ secrets.AWS_ACCOUNT_USERNAME }} --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ enb.DEV_REPO_NAME }}
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username ${{ secrets.AWS_ACCOUNT_USERNAME }} --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.DEV_REPO_NAME }}
        
       - name: Actual deployment to Amazon Cloud environment
         working-directory: ./pulu/dev
