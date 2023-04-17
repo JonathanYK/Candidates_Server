@@ -15,7 +15,6 @@ const availabilityZoneRDSd: string = "us-east-1d";
 
 
 // pull aws secrets
-// Define the file path and content
 const filePath = "../awsSecrets.json";
 
 // Parse the JSON data into a JavaScript object
@@ -26,7 +25,6 @@ const awsSecrets = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 const candVpc = new aws.ec2.Vpc("cand-vpc", {
     cidrBlock: "10.0.0.0/16",
 
-    // debug remove:
     enableDnsSupport: true,
     enableDnsHostnames: true,
     tags: {
@@ -124,7 +122,7 @@ const candPublicRouteTable = new aws.ec2.RouteTable("cand-publ-routetable", {
 export const candPublicRouteTableId = candPublicRouteTable.id;
 
 
-// Route to the Internet Gateway for public subnets
+// Route to Internet Gateway for public subnets
 const publicRoute = new aws.ec2.Route("public-route", {
   routeTableId: candPublicRouteTable.id,
   destinationCidrBlock: "0.0.0.0/0",
@@ -182,6 +180,7 @@ const candPrivateRouteTable = new aws.ec2.RouteTable("cand-priv-routetable", {
   }
 });
 export const candPrivateRouteTableId = candPrivateRouteTable.id;
+
 
 // associate candPrivateSubnet1 to private route table
 new aws.ec2.RouteTableAssociation("cand-priv-subnet-1-routetable-association", {
@@ -296,15 +295,14 @@ const pgInstance = new aws.rds.Instance("postgres-instance", {
   password: awsSecrets.password,
   skipFinalSnapshot: true,
   publiclyAccessible: true,
-  
   tags: {
     Name: "cand-postgres-instance"
   },
 });
 export const pgInstanceId = pgInstance.id 
-
-
 const rdsEndpoint = pgInstance.endpoint.apply(endpoint => endpoint);
+
+
 // create talble "users" in RDS PostgreSQL if not exists
 pulumi.all([rdsEndpoint]).apply(([rdsEndpoint]) => {
 
@@ -330,7 +328,6 @@ pulumi.all([rdsEndpoint]).apply(([rdsEndpoint]) => {
 const candRepository = new aws.ecr.Repository("my-repository", {forceDelete: true});
 export const candRepositoryId = candRepository.id;
 
-const candImageName = candRepository.repositoryUrl;
 const candImgName = "cand-image";
 const candImgVer = "v1.0"; 
 
@@ -339,13 +336,13 @@ const candImage = new docker.Image(candImgName, {
   build: {
     context: "../../serv",
   },
-  imageName: pulumi.interpolate`${candImageName}:${candImgVer}`,
+  imageName: pulumi.interpolate`${candRepository.repositoryUrl}:${candImgVer}`,
 });
-
 
 // export the base and specific version image name.
 export const baseImageName = candImage.baseImageName;
 export const fullImageName = candImage.imageName;
+
 
 // cand fargate cluster
 const candCluster = new aws.ecs.Cluster("cand-cluster", {
@@ -353,6 +350,7 @@ const candCluster = new aws.ecs.Cluster("cand-cluster", {
     Name: "cand-ecs-cluster"
   },
 });
+export const candClusterId = candCluster.id;
 const candClusterName = candCluster.name.apply(candCluster => candCluster);
 
 
@@ -471,10 +469,11 @@ const candFargateService = new awsx.ecs.FargateService("cand-fargate-service", {
 export const candFargateServiceId = candFargateService.service.id;
 const candFargateServiceName = candFargateService.service.apply(service => service.name);
 
+
 // create Dashboard at the end:
 const candDashboard = pulumi.all([]).apply(([]) => {
 
-  candFargateService.taskDefinition
+  // CloudWatch Dashboard with CPU and memory Utilization
   return  new aws.cloudwatch.Dashboard("candDashboard", {
     dashboardName: "candDashboard",
     dashboardBody: JSON.stringify({

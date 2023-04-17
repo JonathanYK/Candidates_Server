@@ -14,28 +14,28 @@ const availabilityZoneRDSd: string = "us-west-2d";
 
 
 // pull aws secrets
-// Define the file path and content
 const filePath = "../awsSecrets.json";
 
 // Parse the JSON data into a JavaScript object
 const awsSecrets = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 
-const provider = new aws.Provider("provider", {
+
+// Provider to assign region
+const prodCandProvider = new aws.Provider("prod-cand-provider", {
   region: "us-west-2"
 });
-
+export const prodCandProviderId = prodCandProvider.id;
 
 // candidate main VPC
 const prodCandVpc = new aws.ec2.Vpc("prod-cand-vpc", {
     cidrBlock: "10.0.0.0/16",
 
-    // debug remove:
     enableDnsSupport: true,
     enableDnsHostnames: true,
     tags: {
       Name: "prod-cand-vpc"
     }
-  }, { provider });
+  }, { provider: prodCandProvider });
 export const prodCandVpcId = prodCandVpc.id;
 
 
@@ -45,7 +45,7 @@ const vpcGw = new aws.ec2.InternetGateway("cand-vpc-gw", {
   tags: {
     Name: "cand-vpc-gw"
   },
-}, { provider });
+}, { provider: prodCandProvider });
 export const vpcGwId = vpcGw.id;
 
 
@@ -77,7 +77,7 @@ const candSg = new aws.ec2.SecurityGroup("cand-security-group", {
   tags: {
     Name: "cand-sg"
   },
-}, { provider });
+}, { provider: prodCandProvider });
 export const candSgId = candSg.id;
 
 
@@ -87,8 +87,9 @@ const candEip = new aws.ec2.Eip("cand-eip-nat", {
   tags: {
     Name: "cand-eip-nat"
   }
-}, { provider });
+}, { provider: prodCandProvider });
 export const candEipId = candEip.id;
+
 
 // candidate public subnet 1
 const candPublicSubnet1 = new aws.ec2.Subnet("cand-pub-subnet-1", {
@@ -99,7 +100,7 @@ const candPublicSubnet1 = new aws.ec2.Subnet("cand-pub-subnet-1", {
   tags: {
     Name: "cand-pub-subnet-1"
   }
-}, { provider });
+}, { provider: prodCandProvider });
 export const candPublicSubnet1Id = candPublicSubnet1.id;
 
 
@@ -112,7 +113,7 @@ const candPublicSubnet2 = new aws.ec2.Subnet("cand-pub-subnet-2", {
   tags: {
       Name: "cand-pub-subnet-2"
   }
-}, { provider });
+}, { provider: prodCandProvider });
 export const candPublicSubnet2Id = candPublicSubnet2.id;
 
 
@@ -122,7 +123,7 @@ const candPublicRouteTable = new aws.ec2.RouteTable("cand-publ-routetable", {
   tags: {
       Name: "cand-publ-routetable"
   }
-}, { provider });
+}, { provider: prodCandProvider });
 export const candPublicRouteTableId = candPublicRouteTable.id;
 
 
@@ -131,7 +132,7 @@ const publicRoute = new aws.ec2.Route("public-route", {
   routeTableId: candPublicRouteTable.id,
   destinationCidrBlock: "0.0.0.0/0",
   gatewayId: vpcGw.id,
-}, { provider });
+}, { provider: prodCandProvider });
 export const publicRouteId = publicRoute.id;
 
 
@@ -139,7 +140,7 @@ export const publicRouteId = publicRoute.id;
 const publicSubnetAssociationSub1 = new aws.ec2.RouteTableAssociation("cand-publ-subnet-1-routetable-association", {
   subnetId: candPublicSubnet1.id,
   routeTableId: candPublicRouteTable.id,
-}, { provider });
+}, { provider: prodCandProvider });
 export const publicSubnetAssociationSub1Id = publicSubnetAssociationSub1.id;
 
 
@@ -147,7 +148,7 @@ export const publicSubnetAssociationSub1Id = publicSubnetAssociationSub1.id;
 const publicSubnetAssociationSub2 = new aws.ec2.RouteTableAssociation("cand-publ-subnet-2-routetable-association", {
   subnetId: candPublicSubnet2.id,
   routeTableId: candPublicRouteTable.id, 
-}, { provider });
+}, { provider: prodCandProvider });
 export const publicSubnetAssociationSub2Id = publicSubnetAssociationSub2.id;
 
 
@@ -159,7 +160,7 @@ const candPrivateSubnet1 = new aws.ec2.Subnet("cand-priv-subnet-1", {
   tags: {
       Name: "cand-priv-subnet-1"
   }
-}, { provider });
+}, { provider: prodCandProvider });
 export const candPrivateSubnet1Id = candPrivateSubnet1.id;
 
 
@@ -171,7 +172,7 @@ const candPrivateSubnet2 = new aws.ec2.Subnet("cand-priv-subnet-2", {
   tags: {
       Name: "cand-priv-subnet-2"
   },
-}, { provider });
+}, { provider: prodCandProvider });
 export const candPrivateSubnet2Id = candPrivateSubnet2.id;
 
 
@@ -181,21 +182,22 @@ const candPrivateRouteTable = new aws.ec2.RouteTable("cand-priv-routetable", {
   tags: {
       Name: "cand-priv-routetable"
   }
-}, { provider });
+}, { provider: prodCandProvider });
 export const candPrivateRouteTableId = candPrivateRouteTable.id;
+
 
 // associate candPrivateSubnet1 to private route table
 new aws.ec2.RouteTableAssociation("cand-priv-subnet-1-routetable-association", {
   subnetId: candPrivateSubnet1.id,
   routeTableId: candPrivateRouteTable.id,
-}, { provider });
+}, { provider: prodCandProvider });
 
 
 // associate candPrivateSubnet2 to private route table
 new aws.ec2.RouteTableAssociation("cand-priv-subnet-2-routetable-association", {
   subnetId: candPrivateSubnet2.id,
   routeTableId: candPrivateRouteTable.id,
-}, { provider });
+}, { provider: prodCandProvider });
 
 
 // nat gw for private subnet 1
@@ -205,7 +207,7 @@ const candNatGatewayPrivSub1 = new aws.ec2.NatGateway("cand-nat-gw-priv-subnet-1
   tags: {
     Name: "cand-nat-gw-priv-subnet-1"
   }
-}, { provider });
+}, { provider: prodCandProvider });
 export const candNatGatewayPrivSub1Id = candNatGatewayPrivSub1.id;
 
 
@@ -219,7 +221,7 @@ const candRDSPublicSubnet1 = new aws.ec2.Subnet("cand-rds-pub-subnet1", {
   tags: {
     Name: "cand-rds-pub-subnet1"
   }
-}, { provider });
+}, { provider: prodCandProvider });
 export const candRDSPublicSubnet1Id = candRDSPublicSubnet1.id;
 
 
@@ -232,7 +234,7 @@ const candRDSPublicSubnet2 = new aws.ec2.Subnet("cand-rds-pub-subnet2", {
   tags: {
     Name: "cand-rds-pub-subnet2"
   }
-}, { provider });
+}, { provider: prodCandProvider });
 export const candRDSPublicSubnet2Id = candRDSPublicSubnet2.id;
 
 
@@ -242,7 +244,7 @@ const candPublicRdsRouteTable = new aws.ec2.RouteTable("cand-publ-rds-routetable
   tags: {
       Name: "cand-publ-rds-routetable"
   }
-}, { provider });
+}, { provider: prodCandProvider });
 export const candPublicRdsRouteTableId = candPublicRdsRouteTable.id;
 
 
@@ -251,7 +253,7 @@ const publicRouteRds = new aws.ec2.Route("public-route-rds", {
   routeTableId: candPublicRdsRouteTable.id,
   destinationCidrBlock: "0.0.0.0/0",
   gatewayId: vpcGw.id,
-}, { provider });
+}, { provider: prodCandProvider });
 export const publicRouteRdsId = publicRouteRds.id;
 
 
@@ -259,14 +261,15 @@ export const publicRouteRdsId = publicRouteRds.id;
 const publicSubnetAssociationSub1Rds = new aws.ec2.RouteTableAssociation("cand-publ-rds-subnet-1-routetable-association", {
   subnetId: candRDSPublicSubnet1.id,
   routeTableId: candPublicRdsRouteTable.id,
-}, { provider });
+}, { provider: prodCandProvider });
 export const publicSubnetAssociationSub1RdsId = publicSubnetAssociationSub1Rds.id;
+
 
 // Associate candRDSPublicSubnet2 with the public route table
 const publicSubnetAssociationSub2Rds = new aws.ec2.RouteTableAssociation("cand-publ-rds-subnet-2-routetable-association", {
   subnetId: candRDSPublicSubnet2.id,
   routeTableId: candPublicRdsRouteTable.id,
-}, { provider });
+}, { provider: prodCandProvider });
 export const publicSubnetAssociationSub2RdsId = publicSubnetAssociationSub2Rds.id;
 
 
@@ -279,7 +282,7 @@ const rdsSubnetGroup = new aws.rds.SubnetGroup("cand-rds-subnet-group", {
   tags: {
       Name: "cand-rds-subnet-group",
   },
-}, { provider });
+}, { provider: prodCandProvider });
 export const rdsSubnetGroupId = rdsSubnetGroup.id;
 
   
@@ -301,7 +304,7 @@ const pgInstance = new aws.rds.Instance("postgres-instance", {
   tags: {
     Name: "cand-postgres-instance"
   },
-}, { provider });
+}, { provider: prodCandProvider });
 export const pgInstanceId = pgInstance.id 
 
 
@@ -328,10 +331,9 @@ pulumi.all([rdsEndpoint]).apply(([rdsEndpoint]) => {
 
 
 // ecr repository to store the Docker image.
-const candRepository = new aws.ecr.Repository("my-repository", {forceDelete: true}, { provider });
+const candRepository = new aws.ecr.Repository("my-repository", {forceDelete: true}, { provider: prodCandProvider });
 export const candRepositoryId = candRepository.id;
 
-const candImageName = candRepository.repositoryUrl;
 const candImgName = "cand-image";
 const candImgVer = "v1.0"; 
 
@@ -340,20 +342,22 @@ const candImage = new docker.Image(candImgName, {
   build: {
     context: "../../serv",
   },
-  imageName: pulumi.interpolate`${candImageName}:${candImgVer}`,
-}, { provider });
+  imageName: pulumi.interpolate`${candRepository.repositoryUrl}:${candImgVer}`,
+}, { provider: prodCandProvider });
 
 
 // export the base and specific version image name.
 export const baseImageName = candImage.baseImageName;
 export const fullImageName = candImage.imageName;
 
+
 // cand fargate cluster
 const candCluster = new aws.ecs.Cluster("cand-cluster", {
   tags: {
     Name: "cand-ecs-cluster"
   },
-}, { provider });
+}, { provider: prodCandProvider });
+export const candClusterId = candCluster.id;
 const candClusterName = candCluster.name.apply(candCluster => candCluster);
 
 
@@ -365,7 +369,7 @@ const candLb = new aws.lb.LoadBalancer("cand-alb", {
   tags: {
     Name: "cand-application-lb"
   },
-}, { provider });
+}, { provider: prodCandProvider });
 export const candLbId = candLb.id;
 
 
@@ -379,7 +383,7 @@ const candTG = new aws.lb.TargetGroup("cand-tg-8085", {
   tags: {
     Name: "cand-targetgroup-8085"
   },
-}, { provider });
+}, { provider: prodCandProvider });
 export const candTGId = candTG.id;
 
 
@@ -396,7 +400,7 @@ const candListener = new aws.lb.Listener("cand-listener-8085", {
   tags: {
     Name: "cand-listener-8085"
   },
-}, { provider });
+}, { provider: prodCandProvider });
 export const candListenerId = candListener.id;
 
 
@@ -406,7 +410,7 @@ const logGroup = new aws.cloudwatch.LogGroup("cand-log-group", {
   tags: {
     Name: "cand-log-group"
   },
-}, { provider });
+}, { provider: prodCandProvider });
 // Export the log group
 export const logGroupId = logGroup.id;
 
@@ -469,7 +473,7 @@ const candFargateService = new awsx.ecs.FargateService("cand-fargate-service", {
     Name: "cand-fargate-service"
   },
   ...fargateServiceOptions
-}, { provider });
+}, { provider: prodCandProvider });
 
 export const candFargateServiceId = candFargateService.service.id;
 const candFargateServiceName = candFargateService.service.apply(service => service.name);
@@ -477,7 +481,7 @@ const candFargateServiceName = candFargateService.service.apply(service => servi
 // create Dashboard at the end:
 const candDashboard = pulumi.all([]).apply(([]) => {
 
-  candFargateService.taskDefinition
+  // CloudWatch Dashboard with CPU and memory Utilization
   return  new aws.cloudwatch.Dashboard("candDashboard", {
     dashboardName: "candDashboard",
     dashboardBody: JSON.stringify({
@@ -532,6 +536,6 @@ const candDashboard = pulumi.all([]).apply(([]) => {
             } 
         ],
     }),
-  }, { provider });
+  }, { provider: prodCandProvider });
 });
 export const candDashboardId = candDashboard.id
