@@ -5,6 +5,8 @@ import * as docker from "@pulumi/docker";
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 
+const region: string = "us-east-1"
+
 const availabilityZoneA: string = "us-east-1a";
 const availabilityZoneB: string = "us-east-1b";
 
@@ -497,7 +499,7 @@ const candDashboard = pulumi.all([]).apply(([]) => {
                 ],
                 period: 300,
                 stat: "Average",
-                region: "us-east-1",
+                region: region,
                 title: "Candidate service Container CPU",
               }
             },
@@ -521,7 +523,7 @@ const candDashboard = pulumi.all([]).apply(([]) => {
                 ],
                 period: 300,
                 stat: "Average",
-                region: "us-east-1",
+                region: region,
                 title: "Candidate service Container Memory",
               }
             } 
