@@ -1,0 +1,7 @@
+name: pulu-aws-candidate
+runtime: nodejs
+description: Candidate service deployed to AWS using Pulumi - production environment
+provider:
+  aws:
+    region: us-west-2
+    profile: yonatan
