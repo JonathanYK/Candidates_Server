@@ -46,7 +46,7 @@ Docker authentication with ECR:
 ```
 **Deploying both stacks using the command `pulumi up -s <stack name>` after installing Pulumi, configuring AWS credentials, and authenticating Docker with ECR**
 - Any push or pull request to branches other than `main` will trigger [pulumi_dev_deployment action](https://github.com/JonathanYK/Candidates_Server/blob/part2pulu/.github/workflows/pulumi_dev_deployment.yml)
-- While any push or pull request directly to `main` branch will trigger aaa [pulumi_prod_deployment action](https://github.com/JonathanYK/Candidates_Server/blob/part2pulu/.github/workflows/pulumi_prod_deployment.yml)
+- While any push or pull request directly to `main` branch will trigger [pulumi_prod_deployment action](https://github.com/JonathanYK/Candidates_Server/blob/part2pulu/.github/workflows/pulumi_prod_deployment.yml)
 
 $~~~$
 
