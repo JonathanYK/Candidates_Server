@@ -29,7 +29,6 @@ export const prodCandProviderId = prodCandProvider.id;
 // candidate main VPC
 const prodCandVpc = new aws.ec2.Vpc("prod-cand-vpc", {
     cidrBlock: "10.0.0.0/16",
-
     enableDnsSupport: true,
     enableDnsHostnames: true,
     tags: {
@@ -405,14 +404,14 @@ export const candListenerId = candListener.id;
 
 
 // Create a CloudWatch Log Group with retention
-const logGroup = new aws.cloudwatch.LogGroup("cand-log-group", {
+const candLogGroup = new aws.cloudwatch.LogGroup("cand-log-group", {
   retentionInDays: 1,
   tags: {
     Name: "cand-log-group"
   },
 }, { provider: prodCandProvider });
 // Export the log group
-export const logGroupId = logGroup.id;
+export const candLogGrouppId = candLogGroup.id;
 
 
 // unprotect resource (for force deletion)
@@ -438,8 +437,17 @@ const candFargateService = new awsx.ecs.FargateService("cand-fargate-service", {
         name: candImgName,
         image: fullImageName,
         
+        logConfiguration: {
+          logDriver: "awslogs",
+          options: {
+              "awslogs-region": region,
+              "awslogs-group": candLogGroup.name,
+              "awslogs-stream-prefix": "--candImage Logs--"
+          }
+        },
         cpu: 256,
         memory: 128,
+        
         environment: [
           {
             name: "DB_HOST",
