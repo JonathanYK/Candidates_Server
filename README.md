@@ -2,7 +2,7 @@
 
 The Candidates Server is developed using Express.js framework and offers several APIs for accessing and managing candidate information stored in PostgreSQL.
 
-Exposed APIs:
+Exposed APIs (Postman collection json [here](https://github.com/JonathanYK/Candidates_Server/tree/part2pulu/postman_collection_API_tests)):
 ```
 http://<IP>:<PORT>                                                                                         - main page with greeting
 http://<IP>:<PORT>/health                                                                                  - GET health check.
@@ -14,12 +14,13 @@ http://<IP>:<PORT>/candidate?candId=<candidate id>&candEmail=<new candidate emai
 http://<IP>:<PORT>/candidate?candId=<candidate id>                                                         - DELETE candidate by its id.
 
 
+
 Dockerized execution:
 IP:	localhost
 PORT:	3001
 
 Cloud deployment execution:
-IP:	<candImage public IP>
+IP:	<CandTaskContainerPublicIp>
 PORT:	8085
 ```
 
