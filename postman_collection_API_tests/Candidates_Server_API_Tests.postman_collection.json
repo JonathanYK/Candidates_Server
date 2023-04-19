@@ -1,0 +1,221 @@
+{
+	"info": {
+		"_postman_id": "7b96f9f3-c8ba-4560-9854-d5f7ebdc3870",
+		"name": "Candidates_Server_API_Tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "server_main_page",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://*CandTaskContainerPublicIp*:8085/",
+					"protocol": "http",
+					"host": [
+						"54",
+						"165",
+						"112",
+						"111"
+					],
+					"port": "8085",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "server_health_check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://*CandTaskContainerPublicIp*:8085/health",
+					"protocol": "http",
+					"host": [
+						"54",
+						"165",
+						"112",
+						"111"
+					],
+					"port": "8085",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "rds_ready_check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://*CandTaskContainerPublicIp*:8085/ready",
+					"protocol": "http",
+					"host": [
+						"54",
+						"165",
+						"112",
+						"111"
+					],
+					"port": "8085",
+					"path": [
+						"ready"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_all_candidates",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://*CandTaskContainerPublicIp*:8085/all-candidates",
+					"protocol": "http",
+					"host": [
+						"54",
+						"165",
+						"112",
+						"111"
+					],
+					"port": "8085",
+					"path": [
+						"all-candidates"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_candidate_by_name",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://*CandTaskContainerPublicIp*:8085/candidate?candName=*candName*",
+					"protocol": "http",
+					"host": [
+						"54",
+						"165",
+						"112",
+						"111"
+					],
+					"port": "8085",
+					"path": [
+						"candidate"
+					],
+					"query": [
+						{
+							"key": "candName",
+							"value": "*candName*"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post_new_candidate",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://*CandTaskContainerPublicIp*:8085/candidate?candId=*candId*&candName=*candName*&candEmail=*candEmail*",
+					"protocol": "http",
+					"host": [
+						"54",
+						"165",
+						"112",
+						"111"
+					],
+					"port": "8085",
+					"path": [
+						"candidate"
+					],
+					"query": [
+						{
+							"key": "candId",
+							"value": "*candId*"
+						},
+						{
+							"key": "candName",
+							"value": "*candName*"
+						},
+						{
+							"key": "candEmail",
+							"value": "*candEmail*"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "put_candidate_new_email",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://*CandTaskContainerPublicIp*:8085/candidate?candId=*candId*&candEmail=*candEmail*",
+					"protocol": "http",
+					"host": [
+						"54",
+						"165",
+						"112",
+						"111"
+					],
+					"port": "8085",
+					"path": [
+						"candidate"
+					],
+					"query": [
+						{
+							"key": "candId",
+							"value": "*candId*"
+						},
+						{
+							"key": "candEmail",
+							"value": "*candEmail*"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete_candidate_by_id",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://18.204.221.49:8085/candidate?candId=*candId*",
+					"protocol": "http",
+					"host": [
+						"18",
+						"204",
+						"221",
+						"49"
+					],
+					"port": "8085",
+					"path": [
+						"candidate"
+					],
+					"query": [
+						{
+							"key": "candId",
+							"value": "*candId*"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
