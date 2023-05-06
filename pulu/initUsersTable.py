@@ -1,4 +1,10 @@
-import sys
+"""
+This Python script connects to a PostgreSQL database and creates a table named "users".
+It takes arguments for the database: host, port, name, username, and password.
+It uses the psycopg2 library to establish the connection and create the table.
+If the table already exists, it prints a message. Finally, it closes the connection.
+"""
+# import sys
 import psycopg2
 
 # Get the arguments passed to the Python script

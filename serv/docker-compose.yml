@@ -8,9 +8,7 @@ services:
       - .:/src
     command: npm run dev
     ports:
-      - "3001:3001"
-    #depends_on:
-    #  - db
+      - "3001:3001" 
     environment:
       - DATABASE_URL=${DB_URL}
       - PORT=${PORT}
