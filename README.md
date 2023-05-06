@@ -46,8 +46,13 @@ Docker authentication with ECR:
           
 ```
 **Deploying both stacks using the command `pulumi up -s <stack name>` after installing Pulumi, configuring AWS credentials, and authenticating Docker with ECR**
-- Any push or pull request to branches other than `main` will trigger [pulumi_dev_deployment action](https://github.com/JonathanYK/Candidates_Server/blob/main/.github/workflows/pulumi_dev_deployment.yml)
+- Any push or pull request to branches other than `main` will trigger [pulumi_dev_deployment action](https://github.com/JonathanYK/Candidates_Server/blob/main/.github/workflows/pulumi_dev_deployment.yml) [![CICD](https://github.com/JonathanYK/Candidates_Server/actions/workflows/pulumi_dev_deployment.yml/badge.svg?branch=main)](https://github.com/JonathanYK/Candidates_Server/actions/workflows/pulumi_dev_deployment.yml)
+
 - While any push or pull request directly to `main` branch will trigger [pulumi_prod_deployment action](https://github.com/JonathanYK/Candidates_Server/blob/main/.github/workflows/pulumi_prod_deployment.yml)
+[![CICD](https://github.com/JonathanYK/Candidates_Server/actions/workflows/pulumi_prod_deployment.yml/badge.svg?branch=main)](https://github.com/JonathanYK/Candidates_Server/actions/workflows/pulumi_prod_deployment.yml)
+
+*Please note that these actions are failing because the demo AWS user was deleted before the last few changes were made.*
+
 
 $~~~$
 
