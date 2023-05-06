@@ -2,7 +2,7 @@
 
 The Candidates Server is developed using Express.js framework and offers several APIs for accessing and managing candidate information stored in PostgreSQL.
 
-Exposed APIs (Postman collection json [here](https://github.com/JonathanYK/Candidates_Server/tree/part2pulu/postman_collection_API_tests)):
+Exposed APIs (Postman collection json [here](https://github.com/JonathanYK/Candidates_Server/tree/main/postman_collection_API_tests)):
 ```
 http://<IP>:<PORT>                                                                                         - main page with greeting
 http://<IP>:<PORT>/health                                                                                  - GET health check.
@@ -32,8 +32,8 @@ $~~~$
 ## Candidates Cloud Deployment: Create and sync cloud infrastructe using Pulumi
 
 **Two Pulumi Stacks Available for Deployment:**
-1. `dev` - [Candidates_Server/pulu/dev](https://github.com/JonathanYK/Candidates_Server/tree/part2pulu/pulu/dev) will be deployed on `us-east-1` region.
-2. `prod` - [Candidates_Server/pulu/prod](https://github.com/JonathanYK/Candidates_Server/tree/part2pulu/pulu/prod) will be deployed on `us-west-2` region.
+1. `dev` - [Candidates_Server/pulu/dev](https://github.com/JonathanYK/Candidates_Server/tree/main/pulu/dev) will be deployed on `us-east-1` region.
+2. `prod` - [Candidates_Server/pulu/prod](https://github.com/JonathanYK/Candidates_Server/tree/main/pulu/prod) will be deployed on `us-west-2` region.
 
 ```
 AWS credentials configuration:
@@ -46,13 +46,13 @@ Docker authentication with ECR:
           
 ```
 **Deploying both stacks using the command `pulumi up -s <stack name>` after installing Pulumi, configuring AWS credentials, and authenticating Docker with ECR**
-- Any push or pull request to branches other than `main` will trigger [pulumi_dev_deployment action](https://github.com/JonathanYK/Candidates_Server/blob/part2pulu/.github/workflows/pulumi_dev_deployment.yml)
-- While any push or pull request directly to `main` branch will trigger [pulumi_prod_deployment action](https://github.com/JonathanYK/Candidates_Server/blob/part2pulu/.github/workflows/pulumi_prod_deployment.yml)
+- Any push or pull request to branches other than `main` will trigger [pulumi_dev_deployment action](https://github.com/JonathanYK/Candidates_Server/blob/main/.github/workflows/pulumi_dev_deployment.yml)
+- While any push or pull request directly to `main` branch will trigger [pulumi_prod_deployment action](https://github.com/JonathanYK/Candidates_Server/blob/main/.github/workflows/pulumi_prod_deployment.yml)
 
 $~~~$
 
 ## Infrastructure Visualization of `dev` or `prod` stacks
 
-![AWS_Infra_Visualization](https://github.com/JonathanYK/Candidates_Server/blob/part2pulu/pulu/AWS_Infra_Visualization.png?raw=true)
+![AWS_Infra_Visualization](https://github.com/JonathanYK/Candidates_Server/blob/main/pulu/AWS_Infra_Visualization.png?raw=true)
 
 Elaborate explanation of requirements can be found [Here](https://github.com/JonathanYK/Candidates_Server/blob/main/Candidates_Server_Spec.pdf/).
