@@ -1,0 +1,71 @@
+
+name: CI Pulumi Deployment to Development Stack
+
+ # In case of push or pull request event to any branch except 'main' triggers this action
+on:
+  push:
+    branches:  
+      - '*'
+    paths-ignore:
+      - 'main/**'
+  pull_request:
+    branches: 
+      - '*'
+    paths-ignore:
+      - 'main/**'
+      
+ # In order to manually trigger this action
+  workflow_dispatch:
+  
+env:
+  PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+  AWS_REGION: "us-east-1"
+  
+jobs:
+  deploy-update-aws-environment:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Set up Pulumi
+        uses: pulumi/setup-pulumi@v2
+        with:
+          version: 'latest'
+          cloud-url: 'https://api.pulumi.com'
+          
+      - name: Login to Pulumi user
+        run: |
+          echo "Logging into Pulumi"
+          pulumi login --cloud-url https://api.pulumi.com
+          export PULUMI_ACCESS_TOKEN=${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: Deployment preperation to dev stack
+        working-directory: ./pulu/dev
+        run: |          
+          echo "Installing dependencies"
+          npm install
+          pip install psycopg2
+          
+      - name: Amazon Cloud and Docker Configuration 
+        run: |
+          echo "Configuring Amazon Cloud credentials"
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
+          aws configure set default.region "${{ env.AWS_REGION }}"
+          
+          echo "Configuring Docker credentials"
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username ${{ secrets.AWS_ACCOUNT_USERNAME }} --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.DEV_REPO_NAME }}
+       
+      - name: Actual deployment to Amazon Cloud environment
+        working-directory: ./pulu/dev
+        run: |
+          echo "Deploying and updating aws environment according to pulumi dev stack"
+          pulumi stack select dev
+          pulumi up --yes
+
+      - name: Deployment finish message
+        run: echo "Finished pulumi dev stack deployment successfully!"
+
