@@ -5,16 +5,18 @@ import * as docker from "@pulumi/docker";
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 
+const fargateContainerPort: number = 8085
+
 const region: string = "us-east-1"
 
-const availabilityZoneA: string = "us-east-1a";
-const availabilityZoneB: string = "us-east-1b";
+const availabilityZoneA: string = region + "a";
+const availabilityZoneB: string = region + "b";
 
-const availabilityZoneRDSc: string = "us-east-1c";
-const availabilityZoneRDSd: string = "us-east-1d";
+const availabilityZoneRDSc: string = region + "c";
+const availabilityZoneRDSd: string = region + "d";
 
 
-// pull aws secrets
+// a dedicated file that holds the secrets
 const filePath = "../awsSecrets.json";
 
 // Parse the JSON data into a JavaScript object
@@ -51,8 +53,8 @@ const candSg = new aws.ec2.SecurityGroup("cand-security-group", {
   ingress: [{
     // candImage
     protocol: "tcp",
-    fromPort: 8085,
-    toPort: 8085,
+    fromPort: fargateContainerPort,
+    toPort: fargateContainerPort,
     cidrBlocks: ["0.0.0.0/0"],
 
   }, {
@@ -367,23 +369,23 @@ export const candLbId = candLb.id;
 
 
 // target group for candImg container
-const candTG = new aws.lb.TargetGroup("cand-tg-8085", {
-  port: 8085,
+const candTG = new aws.lb.TargetGroup("cand-tg-" + fargateContainerPort, {
+  port: fargateContainerPort,
   protocol: "HTTP",
   targetType: "ip",
   
   vpcId: candVpc.id,
   tags: {
-    Name: "cand-targetgroup-8085"
+    Name: "cand-targetgroup-" + fargateContainerPort
   },
 });
 export const candTGId = candTG.id;
 
 
-// listener for port 8085
-const candListener = new aws.lb.Listener("cand-listener-8085", {
+// listener for port fargateContainerPort
+const candListener = new aws.lb.Listener("cand-listener-" + fargateContainerPort, {
   loadBalancerArn: candLb.arn,
-  port: 8085,
+  port: fargateContainerPort,
   defaultActions: [
     {
       type: "forward",
@@ -391,7 +393,7 @@ const candListener = new aws.lb.Listener("cand-listener-8085", {
     },
   ],
   tags: {
-    Name: "cand-listener-8085"
+    Name: "cand-listener-" + fargateContainerPort
   },
 });
 export const candListenerId = candListener.id;
@@ -465,7 +467,7 @@ const candFargateService = new awsx.ecs.FargateService("cand-fargate-service", {
         ],
         
         portMappings: [{ 
-          containerPort: 8085,
+          containerPort: fargateContainerPort,
         }],
       },
     },        
