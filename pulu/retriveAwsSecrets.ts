@@ -1,6 +1,6 @@
 /*
-This file uses the AWS Secrets Manager to retrieve a secret named "pulumi-rds-secrets" (template method provided by AWS)
-and saves it to a local file named "awsSecrets.json".
+This file uses the AWS Secrets Manager to retrieve a secret named "pulumi-rds-secrets" (template method provided by AWS),
+it saves it to a local file named "awsSecrets.json" and be later used by Pulumi to set the secrets.
 It uses the "@aws-sdk/client-secrets-manager" library to interact with the AWS Secrets Manager
 and the "fs" library to write the retrieved secret to a file.
 */
